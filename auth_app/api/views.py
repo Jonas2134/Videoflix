@@ -4,10 +4,12 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
+from rest_framework.views import APIView
 from rest_framework import status, generics
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from .serializers import RegisterSerializer, LoginSerializer
 from auth_app.tasks import send_activation_email
@@ -42,7 +44,7 @@ class RegisterView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ActivateAccountView(generics.GenericAPIView):
+class ActivateAccountView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, uidb64, token):
@@ -88,4 +90,24 @@ class LoginView(TokenObtainPairView):
                 secure=True,
                 samesite='Lax'
             )
+        return response
+
+
+class LogoutView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        refresh_token = request.COOKIES.get('refresh_token')
+        if refresh_token is None:
+            return Response({"detail": "Refresh token not found."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except TokenError:
+            return Response({"detail": "Token invalid"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        response = Response({"detail": "Logout successful"}, status=status.HTTP_200_OK)
+        response.delete_cookie('refresh_token')
+        response.delete_cookie('access_token')
         return response
