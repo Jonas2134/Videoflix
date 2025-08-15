@@ -111,3 +111,7 @@ class LogoutView(APIView):
         response.delete_cookie('refresh_token')
         response.delete_cookie('access_token')
         return response
+
+
+class CookieTokenRefreshView(TokenRefreshView):
+    pass
