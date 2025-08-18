@@ -160,3 +160,22 @@ class PasswordResetView(generics.GenericAPIView):
 class PasswordConfirmView(generics.GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = PasswordConfirmSerializer
+
+    def post(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({"detail": "Invalid user."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user is None or not default_token_generator.check_token(user, token):
+            return Response({"detail": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.get_serializer(data=request.data, context={'user': user})
+        if not serializer.is_valid():
+            return Response({"detail": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        new_password = serializer.validated_data['new_password']
+        user.set_password(new_password)
+        user.save()
+        return Response({"detail": "Your Password has been successfully reset."}, status=status.HTTP_200_OK)

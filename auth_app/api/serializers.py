@@ -89,14 +89,17 @@ class PasswordResetSerializer(serializers.Serializer):
 
 
 class PasswordConfirmSerializer(serializers.Serializer):
-    new_password = serializers.CharField(write_only=True, min_length=8)
-    confirmed_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
 
-    def validate_confirmed_password(self, value):
+    def validate_confirm_password(self, value):
         new_password = self.initial_data.get('new_password')
         if new_password and value and new_password != value:
             raise serializers.ValidationError("Passwords do not match.")
         return value
 
     def validate_new_password(self, value):
-        pass
+        user = self.context.get('user')
+        if user and user.check_password(value):
+            raise serializers.ValidationError("New password must not be the same as the old password.")
+        return value
