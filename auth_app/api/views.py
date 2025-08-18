@@ -11,8 +11,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
-from .serializers import RegisterSerializer, LoginSerializer
-from auth_app.tasks import send_activation_email
+from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, PasswordConfirmSerializer
+from auth_app.tasks import send_activation_email, send_password_reset_email
 
 User = get_user_model()
 
@@ -133,3 +133,30 @@ class CookieTokenRefreshView(TokenRefreshView):
             samesite='Lax'
         )
         return response
+
+
+class PasswordResetView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = PasswordResetSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({"detail": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = serializer.validated_data['email']
+        user = User.objects.get(email=email)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        current_site = get_current_site(self.request)
+        reset_link = (
+            f"http://{current_site.domain}"
+            f"{reverse('password_confirm', kwargs={'uidb64': uid, 'token': token})}"
+        )
+        send_password_reset_email(email, reset_link)
+        return Response({"detail": "An email has been sent to reset your password."}, status=status.HTTP_200_OK)
+
+
+class PasswordConfirmView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = PasswordConfirmSerializer

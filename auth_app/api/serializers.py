@@ -77,3 +77,26 @@ class LoginSerializer(TokenObtainPairSerializer):
             'username': user.username
         }
         return data
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("User with this email does not exist.")
+        return value
+
+
+class PasswordConfirmSerializer(serializers.Serializer):
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    confirmed_password = serializers.CharField(write_only=True)
+
+    def validate_confirmed_password(self, value):
+        new_password = self.initial_data.get('new_password')
+        if new_password and value and new_password != value:
+            raise serializers.ValidationError("Passwords do not match.")
+        return value
+
+    def validate_new_password(self, value):
+        pass

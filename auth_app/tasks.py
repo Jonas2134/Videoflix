@@ -11,3 +11,15 @@ def send_activation_email(email, activation_link):
         recipient_list=[email],
         fail_silently=False,
     )
+
+
+def send_password_reset_email(email, reset_link):
+    subject = "Reset your password"
+    message = f"Hi there,\n\nPlease reset your password by clicking on the following link:\n{reset_link}\n\nThank you!"
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email='noreply@videoflix.com',
+        recipient_list=[email],
+        fail_silently=False,
+    )
