@@ -2,6 +2,7 @@ import pytest
 import redis
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
+from django.urls import reverse
 
 
 @pytest.fixture(autouse=True)
@@ -38,3 +39,42 @@ def auth_client(api_client, user):
     token = response.data["access"]
     api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return api_client
+
+
+@pytest.fixture
+def register_url():
+    return reverse('register')
+
+
+@pytest.fixture
+def activate_url():
+    def _url(uidb64, token):
+        return reverse('activate', kwargs={'uidb64': uidb64, 'token': token})
+    return _url
+
+
+@pytest.fixture
+def login_url():
+    return reverse('login')
+
+
+@pytest.fixture
+def logout_url():
+    return reverse('logout')
+
+
+@pytest.fixture
+def token_refresh_url():
+    return reverse('token_refresh')
+
+
+@pytest.fixture
+def password_reset_url():
+    return reverse('password_reset')
+
+
+@pytest.fixture
+def password_confirm_url():
+    def _url(uidb64, token):
+        return reverse('password_confirm', kwargs={'uidb64': uidb64, 'token': token})
+    return _url
