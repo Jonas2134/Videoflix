@@ -9,6 +9,7 @@ ENV/
 __pycache__/
 *.py[cod]
 *.so
+.pytest_cache/
 
 # Django database/ Logs
 *.log
