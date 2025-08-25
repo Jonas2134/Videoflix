@@ -12,9 +12,5 @@ class CategoryAdmin(admin.ModelAdmin):
 class MovieAdmin(admin.ModelAdmin):
     list_display = ('title', 'category', 'created_at')
     readonly_fields = (
-        'video_converted_360p',
-        'video_converted_480p',
-        'video_converted_720p',
-        'video_converted_1080p',
-        'hls_playlist',
+        'hls_master_playlist',
     )
