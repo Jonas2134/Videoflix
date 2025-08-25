@@ -6,7 +6,7 @@ class Movie(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=255)
     description = models.TextField()
-    thumbnail = models.ImageField(upload_to='thumbnails/')
+    thumbnail = models.ImageField(upload_to='thumbnails/', null=True, blank=True)
     category = models.ForeignKey('Category', on_delete=models.CASCADE, related_name='movies')
 
     video_file = models.FileField(upload_to='videos/originals/')
