@@ -11,6 +11,4 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Movie)
 class MovieAdmin(admin.ModelAdmin):
     list_display = ('title', 'category', 'created_at')
-    readonly_fields = (
-        'hls_master_playlist',
-    )
+    readonly_fields = ('hls_master_playlist', )
