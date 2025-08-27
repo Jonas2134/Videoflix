@@ -19,9 +19,10 @@ User = get_user_model()
 
 class RegisterView(generics.CreateAPIView):
     permission_classes = [AllowAny]
+    serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = RegisterSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         data = {}
         if serializer.is_valid():
             saved_account = serializer.save()
@@ -32,7 +33,7 @@ class RegisterView(generics.CreateAPIView):
                 f"http://{current_site.domain}"
                 f"{reverse('activate', kwargs={'uidb64': uid, 'token': token})}"
             )
-            send_activation_email(saved_account.email, activation_link)
+            send_activation_email(self.request, saved_account, activation_link)
             data = {
                 "user": {
                     "id": saved_account.pk,
@@ -143,7 +144,6 @@ class PasswordResetView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response({"detail": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
         email = serializer.validated_data['email']
         user = User.objects.get(email=email)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
@@ -153,7 +153,7 @@ class PasswordResetView(generics.GenericAPIView):
             f"http://{current_site.domain}"
             f"{reverse('password_confirm', kwargs={'uidb64': uid, 'token': token})}"
         )
-        send_password_reset_email(email, reset_link)
+        send_password_reset_email(self.request, email, reset_link)
         return Response({"detail": "An email has been sent to reset your password."}, status=status.HTTP_200_OK)
 
 
