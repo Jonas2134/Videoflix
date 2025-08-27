@@ -1,7 +1,7 @@
 import os
 from rest_framework import status, generics
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from django.http import FileResponse, Http404
 from django.conf import settings
 

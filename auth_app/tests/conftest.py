@@ -1,6 +1,5 @@
 import pytest
 import redis
-from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 from django.urls import reverse
 
@@ -19,8 +18,8 @@ def api_client():
 
 
 @pytest.fixture
-def user(db):
-    user = User.objects.create_user(
+def user(db, django_user_model):
+    user = django_user_model.objects.create_user(
         username="existingtest",
         email="existing@test.com",
         password="pw12345",
