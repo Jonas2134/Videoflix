@@ -1,37 +1,68 @@
+import logging
+import smtplib
+from django_rq import job
 from django.conf import settings
-from django.core.mail import send_mail, EmailMultiAlternatives
+from django.core.mail import send_mail, EmailMultiAlternatives, get_connection
 from django.template.loader import render_to_string
 
+logger = logging.getLogger(__name__)
 
+
+@job
 def send_activation_email(request, user, activation_link):
-    subject = "Activate your account"
-    from_email = "Videoflix <noreply@videoflix.com>"
-    to = [user.email]
+    logger.info(f"🚀 Starte Email-Versand für User: {user.email}")
+    try:
+        subject = "Activate your account"
+        from_email = f"Videoflix <{settings.DEFAULT_FROM_EMAIL}>"
+        to = [user.email]
 
-    logo_url = request.build_absolute_uri(settings.EMAIL_LOGO_PATH)
+        logger.debug(f"From: {from_email}")
+        logger.debug(f"To: {to}")
+        logger.debug(f"Subject: {subject}")
 
-    text_content = f"""
-    Hi {user.email},
+        logo_url = request.build_absolute_uri(settings.EMAIL_LOGO_PATH)
+        logger.debug(f"Logo URL: {logo_url}")
 
-    Please activate your account by clicking on the following link:
-    {activation_link}
+        text_content = f"""
+        Hi {user.email},
 
-    Thank you!
-    """
+        Please activate your account by clicking on the following link:
+        {activation_link}
 
-    html_content = render_to_string('activation_email.html', {
-        "username": user.username,
-        "activation_link": activation_link,
-        "logo_url": logo_url,
-    })
-    msg = EmailMultiAlternatives(subject, text_content, from_email, to)
-    msg.attach_alternative(html_content, "text/html")
-    msg.send()
+        Thank you!
+        """
+
+        logger.debug("📧 Lade HTML-Template...")
+        html_content = render_to_string('activation_email.html', {
+            "username": user.username,
+            "activation_link": activation_link,
+            "logo_url": logo_url,
+        })
+        logger.debug("✅ HTML-Template erfolgreich geladen")
+
+        logger.debug("📨 Erstelle Email-Message...")
+        msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+        msg.attach_alternative(html_content, "text/html")
+
+        logger.info(f"📤 Sende Email über SMTP Server: {settings.EMAIL_HOST}:{settings.EMAIL_PORT}")
+
+        msg.send()
+
+        logger.info(f"✅ Email erfolgreich versendet an: {user.email}")
+
+        return True
+    except Exception as e:
+        logger.error(f"❌ Fehler beim Email-Versand an {user.email}: {str(e)}")
+        logger.exception("📋 Vollständiger Stacktrace:")
+        return False
+
+
+
 
 
 def send_password_reset_email(request, email, reset_link):
     subject = "Reset your password"
-    from_email = "Videoflix <noreply@videoflix.com>"
+    from_email = settings.DEFAULT_FROM_EMAIL
     to = [email]
 
     logo_url = request.build_absolute_uri(settings.EMAIL_LOGO_PATH)
@@ -52,3 +83,16 @@ def send_password_reset_email(request, email, reset_link):
     msg = EmailMultiAlternatives(subject, text_content, from_email, to)
     msg.attach_alternative(html_content, "text/html")
     msg.send()
+
+
+
+
+
+import socket
+
+def check_internet():
+    try:
+        socket.create_connection(("www.google.com", 80))
+        print("Internet connection is available.")
+    except OSError:
+        print("No Internet connection.")

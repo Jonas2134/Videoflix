@@ -23,7 +23,6 @@ class RegisterView(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        data = {}
         if serializer.is_valid():
             saved_account = serializer.save()
             uid = urlsafe_base64_encode(force_bytes(saved_account.pk))
@@ -95,7 +94,7 @@ class LoginView(TokenObtainPairView):
 
 
 class LogoutView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
