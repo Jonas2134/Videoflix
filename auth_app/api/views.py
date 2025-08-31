@@ -12,10 +12,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, PasswordConfirmSerializer
-from auth_app.tasks import send_activation_email, send_password_reset_email
+from auth_app.tasks import send_email
+from auth_app.utils import build_link
 
 User = get_user_model()
-
 
 class RegisterView(generics.CreateAPIView):
     permission_classes = [AllowAny]
@@ -25,14 +25,19 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             saved_account = serializer.save()
-            uid = urlsafe_base64_encode(force_bytes(saved_account.pk))
-            token = default_token_generator.make_token(saved_account)
-            current_site = get_current_site(self.request)
-            activation_link = (
-                f"http://{current_site.domain}"
-                f"{reverse('activate', kwargs={'uidb64': uid, 'token': token})}"
-            )
-            send_activation_email(self.request, saved_account, activation_link)
+            activation_link, token = build_link(request, saved_account, 'activate')
+            try:
+                send_email(
+                    user=saved_account,
+                    subject="Activate your account",
+                    template_name="activation_email.html",
+                    context={
+                        "username": saved_account.username,
+                        "activation_link": activation_link,
+                    }
+                )
+            except Exception as e:
+                return Response({"error": f"Failed to send activation email: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             data = {
                 "user": {
                     "id": saved_account.pk,
@@ -72,10 +77,7 @@ class LoginView(TokenObtainPairView):
             refresh = data.get("refresh")
             access = data.get("access")
             user = data.get("user")
-            response = Response({
-                "detail": "Login successful",
-                "user": user
-            }, status=status.HTTP_200_OK)
+            response = Response({"detail": "Login successful", "user": user}, status=status.HTTP_200_OK)
             response.set_cookie(
                 key='refresh_token',
                 value=refresh,
@@ -145,14 +147,19 @@ class PasswordResetView(generics.GenericAPIView):
             return Response({"detail": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         email = serializer.validated_data['email']
         user = User.objects.get(email=email)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
-        current_site = get_current_site(self.request)
-        reset_link = (
-            f"http://{current_site.domain}"
-            f"{reverse('password_confirm', kwargs={'uidb64': uid, 'token': token})}"
-        )
-        send_password_reset_email(self.request, email, reset_link)
+        reset_link, token = build_link(request, user, 'password_confirm')
+        try:
+            send_email(
+                user=user,
+                subject="Reset your password",
+                template_name="reset_password.html",
+                context={
+                    "username": user.username,
+                    "reset_link": reset_link,
+                }
+            )
+        except Exception as e:
+            return Response({"error": f"Failed to send reset email: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response({"detail": "An email has been sent to reset your password."}, status=status.HTTP_200_OK)
 
 
