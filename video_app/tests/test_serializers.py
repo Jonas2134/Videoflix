@@ -1,5 +1,7 @@
 import pytest
+
 from rest_framework.test import APIRequestFactory
+
 from video_app.api.serializers import VideoSerializer
 from video_app.models import Movie, Category
 

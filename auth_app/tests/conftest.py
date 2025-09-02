@@ -1,7 +1,8 @@
 import pytest
 import redis
-from rest_framework.test import APIClient
+
 from django.urls import reverse
+from rest_framework.test import APIClient
 
 
 @pytest.fixture(autouse=True)

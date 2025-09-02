@@ -1,5 +1,7 @@
 import pytest
+
 from django.contrib.auth import get_user_model
+
 from auth_app.api.serializers import (
     RegisterSerializer,
     LoginSerializer,

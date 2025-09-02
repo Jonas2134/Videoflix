@@ -1,4 +1,5 @@
 import pytest
+
 from unittest import mock
 
 from video_app.models import Movie

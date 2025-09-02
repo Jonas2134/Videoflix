@@ -1,10 +1,12 @@
 import pytest
 import os
+
 from unittest import mock
+
 from django.conf import settings
 from django.http import Http404, FileResponse
-from video_app.api.views import video_hls
 
+from video_app.api.views import video_hls
 from video_app.models import Movie
 
 

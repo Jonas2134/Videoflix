@@ -1,4 +1,5 @@
 import pytest
+
 from django.test import RequestFactory
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken

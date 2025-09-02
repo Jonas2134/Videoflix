@@ -1,8 +1,9 @@
 import os
-import glob
 import json
 import pytest
+
 from unittest import mock
+
 from video_app.models import Movie
 from video_app.signals import movie_post_save, delete_movie_files
 from video_app import tasks
