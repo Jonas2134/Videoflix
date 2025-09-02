@@ -131,7 +131,7 @@ pytest
 
 ```bash
 # Start the Docker Container and open a shell
-# Switch to the bash in the Docker container
+# Switch to the bash in the Docker container with this command:
 docker compose exec web bash
 # Now you can run pytest inside the Docker container
 pytest
