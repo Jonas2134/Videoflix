@@ -1,6 +1,7 @@
 import os
 import subprocess
 import json
+
 from django.conf import settings
 from django.core.files import File
 from django_rq import job
@@ -10,6 +11,14 @@ from .models import Movie
 
 @job
 def generate_thumbnail(movie_id):
+    """
+    Generate a thumbnail for the specified movie.
+    This function uses ffmpeg to extract a frame from the video file and save it as a thumbnail image.
+    This is a background task that can be queued for processing.
+
+    Args:
+        movie_id (int): The ID of the movie for which to generate a thumbnail.
+    """
     movie = Movie.objects.get(id=movie_id)
     if not movie.thumbnail and movie.video_file:
         thumb_dir = os.path.join(settings.MEDIA_ROOT, "thumbnails")
@@ -25,7 +34,15 @@ def generate_thumbnail(movie_id):
 
 
 def has_audio_stream(input_file):
-    """Check if input file has an audio stream using ffprobe."""
+    """
+    Check if input file has an audio stream using ffprobe.
+
+    Args:
+        input_file (str): The path to the input video file.
+
+    Returns:
+        bool: True if the input file has an audio stream, False otherwise.
+    """
     cmd = [
         "ffprobe",
         "-v", "error",
@@ -40,8 +57,16 @@ def has_audio_stream(input_file):
 
 
 def convert_to_hls(movie, input_file):
+    """
+    Convert the specified movie to HLS format.
+    This function generates HLS segments and playlists for multiple resolutions.
+    The generated files are stored in the media directory.
+
+    Args:
+        movie (Movie): The movie instance to convert.
+        input_file (str): The path to the input video file.
+    """
     hls_resolutions = {
-        "360p": "640:360",
         "480p": "854:480",
         "720p": "1280:720",
         "1080p": "1920:1080",
@@ -75,6 +100,13 @@ def convert_to_hls(movie, input_file):
 
 @job
 def convert_movie_task(movie_id):
+    """
+    Convert the specified movie to HLS format.
+    This is a background task that retrieves the movie instance and calls the conversion function.
+
+    Args:
+        movie_id (int): The ID of the movie to convert.
+    """
     movie = Movie.objects.get(id=movie_id)
     input_file = movie.video_file.path
     convert_to_hls(movie, input_file)

@@ -13,6 +13,11 @@ from .tasks import convert_movie_task, generate_thumbnail
 
 @receiver(post_save, sender=Movie)
 def movie_post_save(sender, instance, created, **kwargs):
+    """
+    Signal handler for post-save actions on Movie instances.
+    If a new Movie instance is created and has an associated video file,
+    it triggers asynchronous tasks for generating a thumbnail and converting the video.
+    """
     if created and instance.video_file:
         transaction.on_commit(lambda: generate_thumbnail.delay(instance.id))
         transaction.on_commit(lambda: convert_movie_task.delay(instance.id))
@@ -20,6 +25,11 @@ def movie_post_save(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Movie)
 def delete_movie_files(sender, instance, **kwargs):
+    """
+    Signal handler for post-delete actions on Movie instances.
+    It removes the associated video file and HLS segments from the filesystem
+    and delete the thumbnail images.
+    """
     if instance.video_file:
         if os.path.isfile(instance.video_file.path):
             os.remove(instance.video_file.path)

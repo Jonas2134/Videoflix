@@ -13,6 +13,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     Generates a unique username with email.
 
     Fields:
+        email (str): The user's email address.
+        password (str): The user's password.
         confirmed_password (str): Write-only field to confirm the password.
     """
     confirmed_password = serializers.CharField(write_only=True)
@@ -74,6 +76,10 @@ class LoginSerializer(TokenObtainPairSerializer):
     """
     Custom serializer for user login using email and password.
     Validates the credentials and returns JWT tokens along with user info.
+
+    Fields:
+        email (str): The user's email address.
+        password (str): The user's password.
     """
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
