@@ -63,7 +63,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def save(self):
         """Create a new user account."""
-        super().save()
         pw = self.validated_data['password']
         email = self.validated_data['email']
         username = self.generate_username(email)
