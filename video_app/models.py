@@ -2,6 +2,7 @@ import os
 
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 
@@ -23,10 +24,29 @@ class Movie(models.Model):
     description = models.TextField()
     thumbnail = models.ImageField(upload_to='thumbnails/', null=True, blank=True)
     category = models.ForeignKey('Category', on_delete=models.CASCADE, related_name='movies')
-
     video_file = models.FileField(upload_to='videos/originals/')
-
     hls_master_playlist = models.FileField(upload_to='videos/hls_master/', null=True, blank=True)
+
+    def clean(self):
+        """
+        Custom validation for the Movie model.
+        Ensures that title, description, category_id, and video_file are provided.
+        """
+        if not self.title:
+            raise ValidationError({"title": "Title cannot be empty."})
+        if not self.description:
+            raise ValidationError({"description": "Description cannot be empty."})
+        if not self.category_id:
+            raise ValidationError({"category": "Category must be set."})
+        if not self.video_file:
+            raise ValidationError({"video_file": "Video file must be uploaded."})
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to include validation.
+        """
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def get_hls_index_path(self, resolution):
         """

@@ -15,10 +15,14 @@ from .tasks import convert_movie_task, generate_thumbnail
 def movie_post_save(sender, instance, created, **kwargs):
     """
     Signal handler for post-save actions on Movie instances.
-    If a new Movie instance is created and has an associated video file,
-    it triggers asynchronous tasks for generating a thumbnail and converting the video.
+    If a new Movie instance is not created, the function returns immediately.
+    If a new Movie instance is created, has a title, description, category and has an associated video file.
+    It triggers asynchronous tasks for generating a thumbnail and converting the video.
     """
-    if created and instance.video_file:
+    if not created:
+        return
+
+    if created and instance.title and instance.description and instance.category_id and instance.video_file:
         transaction.on_commit(lambda: generate_thumbnail.delay(instance.id))
         transaction.on_commit(lambda: convert_movie_task.delay(instance.id))
 
