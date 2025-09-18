@@ -16,6 +16,8 @@ __pycache__/
 db.sqlite3
 media/
 staticfiles/
+static/admin/
+static/rest_framework/
 
 # IDEs / Editor
 .vscode/
