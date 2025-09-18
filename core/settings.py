@@ -201,3 +201,5 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'BLACKLIST_AFTER_ROTATION': True,
 }
+
+FRONTEND_URL = os.environ.get("FRONTEND_URL")
