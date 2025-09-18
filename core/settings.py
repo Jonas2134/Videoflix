@@ -47,6 +47,9 @@ DEBUG = str_to_bool(os.getenv('DEBUG', default='False'))
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', default='localhost').split(',')
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', default='http://localhost:4200').split(',')
+CSRF_COOKIE_DOMAIN = os.environ.get("CSRF_COOKIE_DOMAIN")
+CSRF_COOKIE_SECURE = str_to_bool(os.environ.get("CSRF_COOKIE_SECURE", "True"))
+CSRF_COOKIE_SAMESITE = os.environ.get("CSRF_COOKIE_SAMESITE")
 
 CORS_ALLOW_ALL_ORIGINS = str_to_bool(os.environ.get('CORS_ALLOW_ALL_ORIGINS', default='False'))
 CORS_ALLOW_CREDENTIALS = str_to_bool(os.environ.get('CORS_ALLOW_CREDENTIALS', default='True'))
